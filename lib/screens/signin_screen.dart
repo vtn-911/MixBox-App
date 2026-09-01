@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mixboxapp/screens/signup_screen.dart';
+import 'package:mixboxapp/screens/user_screen.dart';
+
+import '../service/auth_service.dart';
 
 class SigninScreen extends StatefulWidget {
   const SigninScreen({super.key});
@@ -11,6 +14,10 @@ class SigninScreen extends StatefulWidget {
 class _SigninScreenState extends State<SigninScreen> {
   bool _obscurePassword = true;
   bool _rememberMe = false;
+
+  TextEditingController emailController = TextEditingController();
+
+  TextEditingController passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -98,6 +105,7 @@ class _SigninScreenState extends State<SigninScreen> {
 
   TextField _inputPassword() {
     return TextField(
+      controller: passwordController,
       obscureText: _obscurePassword,
       decoration: InputDecoration(
         hintText: '••••••••',
@@ -139,6 +147,7 @@ class _SigninScreenState extends State<SigninScreen> {
 
   TextField _inputEmail() {
     return TextField(
+      controller: emailController,
       keyboardType: TextInputType.emailAddress,
       decoration: InputDecoration(
         hintText: 'you@example.com',
@@ -210,9 +219,24 @@ class _SigninScreenState extends State<SigninScreen> {
     );
   }
 
+  Future<void> login() async {
+    try {
+      final result = await AuthService.login(
+        emailController.text.trim(),
+        passwordController.text,
+      );
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => UserScreen(user: result.user)),
+      );
+    } catch (e) {
+      print('LOGIN ERROR: $e');
+    }
+  }
+
   ElevatedButton _signInBtn() {
     return ElevatedButton(
-      onPressed: () {},
+      onPressed: login,
       style: ElevatedButton.styleFrom(
         backgroundColor: const Color(0xff3525CD),
         foregroundColor: Colors.white,

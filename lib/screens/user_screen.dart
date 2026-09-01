@@ -1,0 +1,68 @@
+import 'package:flutter/material.dart';
+import 'package:mixboxapp/models/user_model.dart';
+
+class UserScreen extends StatefulWidget {
+  final UserModel user;
+
+  const UserScreen({super.key, required this.user});
+
+  @override
+  State<StatefulWidget> createState() => _UserScreenState();
+}
+
+class _UserScreenState extends State<UserScreen> {
+  Widget build(BuildContext context) {
+    return Material(
+      child: SafeArea(
+        child: Column(
+          children: [
+            _avatarUser(),
+            const SizedBox(height: 24),
+            Text(
+              widget.user.fullName,
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              widget.user.email,
+              style: TextStyle(fontSize: 16, color: Color(0xff464555)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Container _avatarUser() {
+    return Container(
+      width: 120,
+      height: 120,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white,
+        border: Border.all(color: Color(0xffF8F9FA), width: 4, strokeAlign: -1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 6,
+            spreadRadius: -2,
+            offset: Offset(0, 4),
+          ),
+          BoxShadow(
+            color: Color(0xff4F46E5).withValues(alpha: 0.1),
+            blurRadius: 15,
+            spreadRadius: -3,
+            offset: Offset(0, 10),
+          ),
+        ],
+      ),
+      child: CircleAvatar(
+        radius: 50,
+        backgroundImage: NetworkImage(
+          widget.user.avatarUrl ??
+              'https://api.dicebear.com/7.x/adventurer/svg?seed=load',
+        ),
+      ),
+    );
+  }
+}

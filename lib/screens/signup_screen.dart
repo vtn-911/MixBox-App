@@ -167,11 +167,6 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Terms & Conditions Checkbox
-                  _policyCheckbox(),
-                  const SizedBox(height: 20),
-
                   // Create Account Button
                   _btnCreateAcc(),
                   const SizedBox(height: 20),
@@ -230,62 +225,6 @@ class _SignupScreenState extends State<SignupScreen> {
         'Create Account',
         style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
       ),
-    );
-  }
-
-  Row _policyCheckbox() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 20,
-          height: 20,
-          child: Checkbox(
-            value: _agreeToTerms,
-            activeColor: const Color(0xff3525CD),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),
-            ),
-            side: const BorderSide(color: Color(0xffD0D5DD)),
-            onChanged: (value) {
-              setState(() {
-                _agreeToTerms = value ?? false;
-              });
-            },
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: RichText(
-            text: const TextSpan(
-              style: TextStyle(
-                fontSize: 13,
-                color: Color(0xff464555),
-                height: 1.4,
-              ),
-              children: [
-                TextSpan(text: 'I agree to the '),
-                TextSpan(
-                  text: 'Terms and Conditions',
-                  style: TextStyle(
-                    color: Color(0xff3525CD),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                TextSpan(text: ' and '),
-                TextSpan(
-                  text: 'Privacy Policy',
-                  style: TextStyle(
-                    color: Color(0xff3525CD),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                TextSpan(text: '.'),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 
