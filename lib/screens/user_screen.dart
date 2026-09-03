@@ -12,11 +12,15 @@ class UserScreen extends StatefulWidget {
 
 class _UserScreenState extends State<UserScreen> {
   Widget build(BuildContext context) {
+    final avatarUrl = widget.user.avatarUrl;
+    final imageUrl = avatarUrl != null
+        ? 'http://10.0.2.2:3000$avatarUrl'
+        : null;
     return Material(
       child: SafeArea(
         child: Column(
           children: [
-            _avatarUser(),
+            _avatarUser(imageUrl),
             const SizedBox(height: 24),
             Text(
               widget.user.fullName,
@@ -33,7 +37,7 @@ class _UserScreenState extends State<UserScreen> {
     );
   }
 
-  Container _avatarUser() {
+  Container _avatarUser(String? imageUrl) {
     return Container(
       width: 120,
       height: 120,
@@ -58,10 +62,7 @@ class _UserScreenState extends State<UserScreen> {
       ),
       child: CircleAvatar(
         radius: 50,
-        backgroundImage: NetworkImage(
-          widget.user.avatarUrl ??
-              'https://api.dicebear.com/7.x/adventurer/svg?seed=load',
-        ),
+        backgroundImage: imageUrl != null ? NetworkImage(imageUrl) : null,
       ),
     );
   }

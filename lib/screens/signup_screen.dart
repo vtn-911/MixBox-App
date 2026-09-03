@@ -1,5 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mixboxapp/screens/signin_screen.dart';
+import 'package:mixboxapp/screens/user_screen.dart';
+import 'package:mixboxapp/service/auth_service.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -9,9 +14,11 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
-  bool _agreeToTerms = false;
   bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
+  File? avatarFile;
+  TextEditingController fullnameCtrl = TextEditingController();
+  TextEditingController emailCtrl = TextEditingController();
+  TextEditingController passwordCtrl = TextEditingController();
 
   InputDecoration _buildInputDecoration({
     required String hintText,
@@ -99,6 +106,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                   const SizedBox(height: 6),
                   TextField(
+                    controller: fullnameCtrl,
                     decoration: _buildInputDecoration(
                       hintText: 'Jane Doe',
                       prefixIcon: Icons.person_outline,
@@ -117,6 +125,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                   const SizedBox(height: 6),
                   TextField(
+                    controller: emailCtrl,
                     keyboardType: TextInputType.emailAddress,
                     decoration: _buildInputDecoration(
                       hintText: 'jane@example.com',
@@ -136,6 +145,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                   const SizedBox(height: 6),
                   TextField(
+                    controller: passwordCtrl,
                     obscureText: _obscurePassword,
                     decoration: _buildInputDecoration(
                       hintText: '••••••••',
@@ -146,25 +156,6 @@ class _SignupScreenState extends State<SignupScreen> {
                   const Text(
                     'Must be at least 8 characters with numbers and symbols.',
                     style: TextStyle(fontSize: 12, color: Color(0xff464555)),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Confirm Password
-                  const Text(
-                    'Confirm Password',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xff1E1E24),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  TextField(
-                    obscureText: _obscureConfirmPassword,
-                    decoration: _buildInputDecoration(
-                      hintText: '••••••••',
-                      prefixIcon: Icons.history,
-                    ),
                   ),
                   const SizedBox(height: 16),
                   // Create Account Button
@@ -211,9 +202,26 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
+  Future<void> _register() async {
+    try {
+      final result = await AuthService.register(
+        fullnameCtrl.text.trim(),
+        emailCtrl.text.trim(),
+        passwordCtrl.text.trim(),
+        avatarFile,
+      );
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => UserScreen(user: result.user)),
+      );
+    } catch (e) {
+      print('Register Error: $e');
+    }
+  }
+
   ElevatedButton _btnCreateAcc() {
     return ElevatedButton(
-      onPressed: () {},
+      onPressed: _register,
       style: ElevatedButton.styleFrom(
         backgroundColor: const Color(0xff3525CD),
         foregroundColor: Colors.white,
@@ -226,6 +234,16 @@ class _SignupScreenState extends State<SignupScreen> {
         style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
       ),
     );
+  }
+
+  Future<void> pickAvatar() async {
+    final picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        avatarFile = File(image.path);
+      });
+    }
   }
 
   Center _avatarPickerBtn() {
@@ -245,12 +263,21 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
             ),
             child: RawMaterialButton(
-              onPressed: () {},
+              onPressed: pickAvatar,
               shape: const CircleBorder(),
-              child: const Icon(
-                Icons.add_a_photo_outlined,
-                color: Color(0xff667085),
-                size: 26,
+              child: ClipOval(
+                child: avatarFile != null
+                    ? Image.file(
+                        avatarFile!,
+                        width: 64,
+                        height: 64,
+                        fit: BoxFit.cover,
+                      )
+                    : const Icon(
+                        Icons.add_a_photo_outlined,
+                        color: Color(0xff667085),
+                        size: 26,
+                      ),
               ),
             ),
           ),
