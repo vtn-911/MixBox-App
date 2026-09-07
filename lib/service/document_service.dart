@@ -1,3 +1,4 @@
+import 'package:mixboxapp/models/document_detail.dart';
 import 'package:mixboxapp/models/documents_model.dart';
 import 'package:mixboxapp/service/api_service.dart';
 
@@ -14,5 +15,11 @@ class DocumentService {
         owner: item['owner'],
       );
     }).toList();
+  }
+
+  static Future<DocumentDetail> getDocumentById(String documentId) async {
+    final response = await ApiService.get('/api/documents/$documentId');
+    final data = response['data'];
+    return DocumentDetail.fromJson(data);
   }
 }

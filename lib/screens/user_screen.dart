@@ -44,7 +44,7 @@ class _UserScreenState extends State<UserScreen> {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.white,
-        border: Border.all(color: Color(0xffF8F9FA), width: 4, strokeAlign: -1),
+        border: Border.all(color: Color(0xffF8F9FA), width: 2, strokeAlign: -1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
