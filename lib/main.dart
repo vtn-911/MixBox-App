@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mixboxapp/screens/studyscreen.dart';
+import 'package:mixboxapp/screens/signin_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
         textTheme: const TextTheme().apply(bodyColor: Colors.black),
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const Studyscreen(),
+      home: const SigninScreen(),
     );
   }
 }
