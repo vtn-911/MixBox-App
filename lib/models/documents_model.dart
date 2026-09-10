@@ -20,8 +20,8 @@ class DocumentsModel {
       id: json['id'],
       title: json['title'],
       pageCount: json['page_count'],
-      category: json['category'],
-      owner: json['owner'],
+      category: json['category']['name'],
+      owner: json['owner']['full_name'],
     );
   }
 }

@@ -16,6 +16,14 @@ class Studyscreen extends StatefulWidget {
 class _StudyScreenState extends State<Studyscreen> {
   List<Categoriesmodel> listCate = [];
   List<DocumentsModel> listAllDoc = [];
+  final TextEditingController searchCtrl = TextEditingController();
+  String? selectedCategoryId;
+
+  @override
+  void dispose() {
+    searchCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -38,6 +46,32 @@ class _StudyScreenState extends State<Studyscreen> {
     });
   }
 
+  Future<void> searchDocuments() async {
+    final query = searchCtrl.text.trim();
+    if (query.isEmpty) return;
+    try {
+      final documents = await DocumentService.searchDocuments(query: query);
+      setState(() {
+        listAllDoc = documents;
+      });
+    } catch (e) {
+      print('Search error: $e');
+    }
+  }
+
+  Future<void> filterCategories(String categoryID) async {
+    try {
+      final documents = await DocumentService.searchDocuments(
+        categoryId: categoryID,
+      );
+      setState(() {
+        listAllDoc = documents;
+      });
+    } catch (e) {
+      print('Category filter error: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -46,23 +80,24 @@ class _StudyScreenState extends State<Studyscreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _searchDocs(),
-            const SizedBox(height: 32),
-            Text(
-              'Categories',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+            const SizedBox(height: 16),
+            _txtCategories('Categories'),
             const SizedBox(height: 16),
             _lvCategories(),
             const SizedBox(height: 16),
-            Text(
-              'Recommended for you',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+            _txtCategories('Recommended for you'),
             const SizedBox(height: 16),
             _lvDocments(),
           ],
         ),
       ),
+    );
+  }
+
+  Text _txtCategories(String text) {
+    return Text(
+      text,
+      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
     );
   }
 
@@ -222,19 +257,72 @@ class _StudyScreenState extends State<Studyscreen> {
       height: 42,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: listCate.length,
+        itemCount: listCate.length + 1,
         itemBuilder: (context, index) {
-          return Container(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            margin: EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
-              color: Color(0xffE7E8E9),
+          if (index == 0) {
+            return InkWell(
               borderRadius: BorderRadius.circular(9999),
-            ),
-            child: Center(
-              child: Text(
-                listCate[index].nameCategory,
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              splashColor: Colors.transparent,
+              onTap: () {
+                setState(() {
+                  selectedCategoryId = null;
+                });
+                loadListAllDocuments();
+              },
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                margin: EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: selectedCategoryId == null
+                      ? Color(0xff3525CD)
+                      : Color(0xffE7E8E9),
+                  borderRadius: BorderRadius.circular(9999),
+                ),
+                child: Center(
+                  child: Text(
+                    'All',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: selectedCategoryId == null
+                          ? Colors.white
+                          : Colors.black,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }
+          final category = listCate[index - 1];
+          return InkWell(
+            splashColor: Colors.transparent,
+            borderRadius: BorderRadius.circular(9999),
+            onTap: () {
+              setState(() {
+                selectedCategoryId = category.idCategory;
+              });
+              filterCategories(category.idCategory);
+            },
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              margin: EdgeInsets.only(right: 8),
+              decoration: BoxDecoration(
+                color: selectedCategoryId == category.idCategory
+                    ? Color(0xff3525CD)
+                    : Color(0xffE7E8E9),
+                borderRadius: BorderRadius.circular(9999),
+              ),
+              child: Center(
+                child: Text(
+                  category.nameCategory,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: selectedCategoryId == category.idCategory
+                        ? Colors.white
+                        : Colors.black,
+                  ),
+                ),
               ),
             ),
           );
@@ -259,6 +347,8 @@ class _StudyScreenState extends State<Studyscreen> {
       ),
       child: Center(
         child: TextField(
+          controller: searchCtrl,
+          onSubmitted: (_) => searchDocuments(),
           textInputAction: TextInputAction.search,
           textAlignVertical: TextAlignVertical.center,
           decoration: InputDecoration(
@@ -268,12 +358,19 @@ class _StudyScreenState extends State<Studyscreen> {
             prefixIcon: Icon(Icons.search, size: 20),
             hintText: 'Search documents...',
             hintStyle: TextStyle(color: Color(0xff464555), fontSize: 16),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Color(0xffE2E4E9)),
+            ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: Color(0xffE1E3E4),
-                width: 1,
-                strokeAlign: -1,
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Color(0xffE2E4E9)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(
+                color: Color(0xffC7C4D8),
+                width: 1.5,
               ),
             ),
           ),

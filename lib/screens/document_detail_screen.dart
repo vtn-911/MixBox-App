@@ -42,9 +42,6 @@ class _DocumentDetailState extends State<DocumentDetailScreen> {
       appBar: _appBar(),
       body: CustomScrollView(
         slivers: [
-          // =========================
-          // DOCUMENT INFORMATION
-          // =========================
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             sliver: SliverToBoxAdapter(
@@ -52,106 +49,116 @@ class _DocumentDetailState extends State<DocumentDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _category(),
-
                   const SizedBox(height: 16),
-
                   _titleDocument(),
-
                   const SizedBox(height: 16),
-
                   _uploadProfile(),
-
                   const SizedBox(height: 16),
-
-                  _infoDad(),
-
+                  _infoTypeFile(),
+                  const SizedBox(height: 16),
+                  _txtDescription(),
                   const SizedBox(height: 16),
                 ],
               ),
             ),
           ),
-
-          // =========================
-          // DOCUMENT PAGES
-          // =========================
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final page = dcmDetail!.pages[index];
-
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          maxWidth: 600,
-                          maxHeight: 1000,
-                        ),
-                        child: CachedNetworkImage(
-                          imageUrl: page.pageURL,
-
-                          // Chiều rộng hiển thị tối đa
-                          width: double.infinity,
-
-                          fit: BoxFit.fitWidth,
-
-                          // Decode ảnh ở khoảng 600px thay vì
-                          // giữ nguyên kích thước ảnh gốc.
-                          memCacheWidth: 600,
-
-                          // =========================
-                          // PLACEHOLDER
-                          // =========================
-                          placeholder: (context, url) {
-                            return AspectRatio(
-                              aspectRatio: 1 / 1.414,
-                              child: Container(
-                                color: Colors.grey[100],
-                                child: const Center(
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-
-                          // =========================
-                          // ERROR
-                          // =========================
-                          errorWidget: (context, url, error) {
-                            return Container(
-                              height: 200,
-                              color: Colors.grey[100],
-                              child: const Center(
-                                child: Icon(
-                                  Icons.broken_image,
-                                  color: Colors.grey,
-                                  size: 36,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  );
-                },
-
-                // Flutter chỉ build những item cần thiết
-                // thay vì build toàn bộ danh sách.
-                childCount: dcmDetail!.pages.length,
-              ),
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            sliver: SliverList(delegate: _listImage()),
           ),
         ],
       ),
     );
   }
 
-  Row _infoDad() {
+  SliverChildBuilderDelegate _listImage() {
+    return SliverChildBuilderDelegate((context, index) {
+      final page = dcmDetail!.pages[index];
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600, maxHeight: 1000),
+            child: CachedNetworkImage(
+              imageUrl: page.pageURL,
+              width: double.infinity,
+              fit: BoxFit.fitWidth,
+              memCacheWidth: 600,
+              placeholder: (context, url) {
+                return AspectRatio(
+                  aspectRatio: 1 / 1.414,
+                  child: Container(
+                    color: Colors.grey[100],
+                    child: const Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                );
+              },
+              errorWidget: (context, url, error) {
+                return Container(
+                  height: 200,
+                  color: Colors.grey[100],
+                  child: const Center(
+                    child: Icon(
+                      Icons.broken_image,
+                      color: Colors.grey,
+                      size: 36,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+    }, childCount: dcmDetail!.pages.length);
+  }
+
+  Container _txtDescription() {
+    return Container(
+      padding: EdgeInsets.all(16),
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        color: Colors.white,
+        border: Border.all(
+          width: 1,
+          color: const Color(0xffE1E3E4).withValues(alpha: 0.3),
+          strokeAlign: -1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xff000000).withValues(alpha: 0.03),
+            blurRadius: 2,
+            offset: const Offset(0, 1),
+          ),
+          BoxShadow(
+            color: const Color(0xff4F46E5).withValues(alpha: 0.05),
+            blurRadius: 3,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Desciption',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          ),
+          Text(
+            dcmDetail!.description,
+            maxLines: 5,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 16, color: Color(0xff464555)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Row _infoTypeFile() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [

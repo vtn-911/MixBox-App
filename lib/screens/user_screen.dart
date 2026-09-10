@@ -11,6 +11,7 @@ class UserScreen extends StatefulWidget {
 }
 
 class _UserScreenState extends State<UserScreen> {
+  @override
   Widget build(BuildContext context) {
     final avatarUrl = widget.user.avatarUrl;
     final imageUrl = avatarUrl != null
