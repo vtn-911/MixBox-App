@@ -1,4 +1,5 @@
 import 'package:dotted_border/dotted_border.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:mixboxapp/models/folder_model.dart';
 import 'package:mixboxapp/service/folder_service.dart';
@@ -22,6 +23,7 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
   List<FolderModel> folders = [];
   bool isLoadingCategories = true;
   bool isLoadingFolders = true;
+  PlatformFile? selectedFile;
 
   @override
   void initState() {
@@ -35,6 +37,19 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
     docNameCtrl.dispose();
     descCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> pickFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'docx', 'pptx', 'jpg', 'png'],
+    );
+
+    if (result != null && result.files.isNotEmpty) {
+      setState(() {
+        selectedFile = result.files.first;
+      });
+    }
   }
 
   Future<void> loadFolders() async {
@@ -74,7 +89,7 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
     return Material(
       child: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -145,8 +160,8 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
           ),
           const SizedBox(height: 32),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [_btnCancel(), _btnUpload()],
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [_btnCancel(), const SizedBox(width: 16), _btnUpload()],
           ),
         ],
       ),
@@ -189,87 +204,147 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
     );
   }
 
-  DropdownButtonFormField<String> _drdFolder() {
-    return DropdownButtonFormField<String>(
-      initialValue: selectedFolder,
-      decoration: InputDecoration(
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xff898797), width: 1.5),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xff898797), width: 1.5),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xff5146E5), width: 2),
-        ),
-      ),
-
-      icon: const Icon(
-        Icons.keyboard_arrow_down_rounded,
-        size: 20,
-        color: Color(0xff77778A),
-      ),
-      hint: Text(isLoadingFolders ? 'Loading folders...' : 'Select folder'),
-      items: folders.map((folder) {
-        return DropdownMenuItem<String>(
-          value: folder.id,
-          child: Text(folder.nameFolder),
+  Widget _drdFolder() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return DropdownMenu<String>(
+          width: constraints.maxWidth,
+          initialSelection: selectedFolder,
+          menuHeight: 200,
+          trailingIcon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            size: 20,
+            color: Color(0xff77778A),
+          ),
+          hintText: isLoadingFolders ? 'Loading folders...' : 'Select folder',
+          textStyle: const TextStyle(fontSize: 16, color: Color(0xff30303A)),
+          menuStyle: MenuStyle(
+            backgroundColor: WidgetStateProperty.all<Color>(Colors.white),
+            elevation: WidgetStateProperty.all<double>(4),
+            shape: WidgetStateProperty.all<OutlinedBorder>(
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+          dropdownMenuEntries: folders.map((folder) {
+            return DropdownMenuEntry<String>(
+              value: folder.id,
+              label: folder.nameFolder,
+              style: MenuItemButton.styleFrom(
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  color: Color(0xff30303A),
+                ),
+              ),
+            );
+          }).toList(),
+          onSelected: isLoadingFolders
+              ? null
+              : (value) {
+                  setState(() {
+                    selectedFolder = value;
+                  });
+                },
+          inputDecorationTheme: InputDecorationTheme(
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xff898797),
+                width: 1.5,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xff898797),
+                width: 1.5,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xff5146E5), width: 2),
+            ),
+          ),
         );
-      }).toList(),
-      onChanged: isLoadingFolders
-          ? null
-          : ((value) {
-              setState(() {
-                selectedFolder = value;
-              });
-            }),
-      style: const TextStyle(fontSize: 16, color: Color(0xff30303A)),
+      },
     );
   }
 
-  DropdownButtonFormField<String> _drdSubject() {
-    return DropdownButtonFormField<String>(
-      initialValue: selectedSubject,
-      decoration: InputDecoration(
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xff898797), width: 1.5),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xff898797), width: 1.5),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xff5146E5), width: 2),
-        ),
-      ),
-
-      icon: const Icon(
-        Icons.keyboard_arrow_down_rounded,
-        size: 20,
-        color: Color(0xff77778A),
-      ),
-      hint: Text(
-        isLoadingCategories ? 'Loading categories...' : 'Select subject',
-      ),
-      items: categories.map((category) {
-        return DropdownMenuItem<String>(
-          value: category.idCategory,
-          child: Text(category.nameCategory),
+  Widget _drdSubject() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return DropdownMenu<String>(
+          width: constraints.maxWidth,
+          initialSelection: selectedSubject,
+          menuHeight: 200,
+          trailingIcon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            size: 20,
+            color: Color(0xff77778A),
+          ),
+          hintText: isLoadingCategories
+              ? 'Loading categories...'
+              : 'Select subject',
+          textStyle: const TextStyle(fontSize: 16, color: Color(0xff30303A)),
+          menuStyle: MenuStyle(
+            backgroundColor: WidgetStateProperty.all<Color>(Colors.white),
+            elevation: WidgetStateProperty.all<double>(4),
+            shape: WidgetStateProperty.all<OutlinedBorder>(
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+          dropdownMenuEntries: categories.map((category) {
+            return DropdownMenuEntry<String>(
+              value: category.idCategory,
+              label: category.nameCategory,
+              style: MenuItemButton.styleFrom(
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  color: Color(0xff30303A),
+                ),
+              ),
+            );
+          }).toList(),
+          onSelected: isLoadingCategories
+              ? null
+              : (value) {
+                  setState(() {
+                    selectedSubject = value;
+                  });
+                },
+          inputDecorationTheme: InputDecorationTheme(
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xff898797),
+                width: 1.5,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xff898797),
+                width: 1.5,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xff5146E5), width: 2),
+            ),
+          ),
         );
-      }).toList(),
-      onChanged: isLoadingCategories
-          ? null
-          : ((value) {
-              setState(() {
-                selectedSubject = value;
-              });
-            }),
-      style: const TextStyle(fontSize: 16, color: Color(0xff30303A)),
+      },
     );
   }
 
@@ -322,14 +397,16 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
     );
   }
 
-  Container _previewFile() {
+  Widget _previewFile() {
+    if (selectedFile == null) return const SizedBox.shrink();
+    final double sizeMB = selectedFile!.size / (1024 * 1024);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
       decoration: BoxDecoration(
         color: const Color(0xffFAFAFC),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xffC7C5D8), width: 1.5),
+        border: Border.all(color: const Color(0xffC7C5D8), width: 1),
       ),
       child: Row(
         children: [
@@ -351,23 +428,23 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
           const SizedBox(width: 16),
 
           // File information
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Advanced_Calculus_Lecture',
+                  selectedFile!.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                     color: Color(0xff202124),
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
-                  '2.4 MB • Ready to upload',
+                  '${sizeMB.toStringAsFixed(2)} MB • Ready to upload',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: 12, color: Color(0xff858597)),
@@ -378,7 +455,11 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
 
           // Remove button
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              setState(() {
+                selectedFile = null;
+              });
+            },
             icon: const Icon(Icons.close, size: 25, color: Color(0xff77778A)),
           ),
         ],
@@ -386,56 +467,59 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
     );
   }
 
-  DottedBorder _uploadArea() {
-    return DottedBorder(
-      color: const Color(0xff3525CD).withValues(alpha: 0.3),
-      strokeWidth: 2,
-      dashPattern: const [6, 4],
-      radius: const Radius.circular(12),
-      borderType: BorderType.RRect,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: const Color(0xffFCFCFF),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          children: [
-            // Upload icon
-            Container(
-              width: 64,
-              height: 64,
-              decoration: const BoxDecoration(
-                color: Color(0xff5146E5),
-                shape: BoxShape.circle,
+  Widget _uploadArea() {
+    return InkWell(
+      onTap: pickFile,
+      child: DottedBorder(
+        color: const Color(0xff3525CD).withValues(alpha: 0.3),
+        strokeWidth: 2,
+        dashPattern: const [6, 4],
+        radius: const Radius.circular(12),
+        borderType: BorderType.RRect,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: const Color(0xffFCFCFF),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              // Upload icon
+              Container(
+                width: 64,
+                height: 64,
+                decoration: const BoxDecoration(
+                  color: Color(0xff5146E5),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.cloud_upload_rounded,
+                  size: 29,
+                  color: Colors.white,
+                ),
               ),
-              child: const Icon(
-                Icons.cloud_upload_rounded,
-                size: 29,
-                color: Colors.white,
+              const SizedBox(height: 5),
+              const Text(
+                'Click to browse or drag file here',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xff202124),
+                ),
               ),
-            ),
-            const SizedBox(height: 5),
-            const Text(
-              'Click to browse or drag file here',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xff202124),
+              const Text(
+                'Supports PDF, DOCX, PPTX, JPG (Max 50MB)',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.5,
+                  color: Color(0xff5f5f70),
+                ),
               ),
-            ),
-            const Text(
-              'Supports PDF, DOCX, PPTX, JPG (Max 50MB)',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                height: 1.5,
-                color: Color(0xff5f5f70),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
