@@ -5,12 +5,6 @@ class FolderService {
   static Future<List<FolderModel>> listFolder(String userID) async {
     final response = await ApiService.get('/api/folders?userId=$userID');
     final data = response['data'] as List;
-    return data.map((item) {
-      return FolderModel(
-        id: item['id'],
-        userId: item['user_id'],
-        nameFolder: item['name'],
-      );
-    }).toList();
+    return data.map((item) => FolderModel.fromJson(item)).toList();
   }
 }
