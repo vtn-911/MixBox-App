@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mixboxapp/models/folder_model.dart';
+import 'package:mixboxapp/screens/folderdetail_screen.dart';
 import 'package:mixboxapp/service/folder_service.dart';
 
 class MyfolderScreen extends StatefulWidget {
@@ -75,79 +76,92 @@ class _MyFolderState extends State<MyfolderScreen> {
           : ListView.builder(
               itemCount: listFolder.length,
               itemBuilder: (context, index) {
-                return Container(
-                  margin: EdgeInsets.only(bottom: 20),
-                  padding: EdgeInsets.all(24),
-                  width: double.infinity,
-                  height: 130,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Color(0xff000000).withValues(alpha: 0.03),
-                        blurRadius: 2,
-                        offset: Offset(0, 1),
+                return InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FolderdetailScreen(
+                          folderID: listFolder[index].id,
+                          nameFolder: listFolder[index].nameFolder,
+                        ),
                       ),
-                      BoxShadow(
-                        color: Color(0xff4F46E5).withValues(alpha: 0.05),
-                        blurRadius: 3,
-                        offset: Offset(0, 1),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              listFolder[index].nameFolder,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          _btnMore(),
-                        ],
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.description_outlined,
-                                size: 13,
-                                color: Color(0xff464555),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${listFolder[index].doucments} Docs',
+                    );
+                  },
+                  child: Container(
+                    margin: EdgeInsets.only(bottom: 20),
+                    padding: EdgeInsets.all(24),
+                    width: double.infinity,
+                    height: 130,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0xff000000).withValues(alpha: 0.03),
+                          blurRadius: 2,
+                          offset: Offset(0, 1),
+                        ),
+                        BoxShadow(
+                          color: Color(0xff4F46E5).withValues(alpha: 0.05),
+                          blurRadius: 3,
+                          offset: Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                listFolder[index].nameFolder,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xff464555),
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                            ],
-                          ),
-                          Text(
-                            getUpdatedTime(listFolder[index].updatedAt),
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Color(0xff777587),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                            const SizedBox(width: 8),
+                            _btnMore(),
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.description_outlined,
+                                  size: 13,
+                                  color: Color(0xff464555),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${listFolder[index].doucments} Docs',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xff464555),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Text(
+                              getUpdatedTime(listFolder[index].updatedAt),
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Color(0xff777587),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
