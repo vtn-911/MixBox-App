@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:mixboxapp/models/recent_documents.dart';
 import 'package:mixboxapp/models/section_quickaction.dart';
+import 'package:mixboxapp/screens/myfolder_screen.dart';
+import 'package:mixboxapp/screens/scanner_screen.dart';
+import 'package:mixboxapp/screens/studyscreen.dart';
+import 'package:mixboxapp/screens/user_screen.dart';
 
 class Homescreen extends StatefulWidget {
   const Homescreen({super.key});
@@ -14,36 +18,55 @@ class _HomeScreenState extends State<Homescreen> {
       SectionQuickaction.getSectionQuickAction();
   List<RecentDocuments> recentItem = RecentDocuments.getrecentitem();
 
+  late final List<Widget> _screens;
+  int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      _HomeContent(),
+      const Studyscreen(),
+      const ScannerScreen(),
+      const MyfolderScreen(),
+      const UserScreen(),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _appbar(),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'What do you want to do today?',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-              ),
-              const SizedBox(height: 5),
-              const Text(
-                "Let's keep up the great work.",
-                style: TextStyle(fontSize: 16),
-              ),
-              const SizedBox(height: 32),
-              _gvQuickAction(),
-              const SizedBox(height: 32),
-              _rTitleRecentDocs(),
-              const SizedBox(height: 16),
-              _lvRecentDocs(),
-            ],
-          ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
+      bottomNavigationBar: _bottomBar(),
+    );
+  }
+
+  Widget _HomeContent() {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'What do you want to do today?',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+            ),
+            const SizedBox(height: 5),
+            const Text(
+              "Let's keep up the great work.",
+              style: TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 32),
+            _gvQuickAction(),
+            const SizedBox(height: 32),
+            _rTitleRecentDocs(),
+            const SizedBox(height: 16),
+            _lvRecentDocs(),
+          ],
         ),
       ),
-      bottomNavigationBar: _bottomBar(),
     );
   }
 
@@ -51,11 +74,19 @@ class _HomeScreenState extends State<Homescreen> {
     return SizedBox(
       height: 66,
       child: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
         backgroundColor: Color(0xffF8F9FA),
         unselectedItemColor: Colors.black,
+        selectedItemColor: Color(0xff3525CD),
         type: BottomNavigationBarType.fixed,
         selectedFontSize: 12,
         unselectedFontSize: 12,
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
         items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined, size: 20),

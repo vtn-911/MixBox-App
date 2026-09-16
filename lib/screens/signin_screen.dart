@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:mixboxapp/providers/user_provider.dart';
+import 'package:mixboxapp/screens/homescreen.dart';
 import 'package:mixboxapp/screens/signup_screen.dart';
-import 'package:mixboxapp/screens/user_screen.dart';
+import 'package:provider/provider.dart';
 
 import '../service/auth_service.dart';
 
@@ -18,6 +20,23 @@ class _SigninScreenState extends State<SigninScreen> {
   final TextEditingController emailController = TextEditingController();
 
   final TextEditingController passwordController = TextEditingController();
+
+  Future<void> login() async {
+    try {
+      final result = await AuthService.login(
+        emailController.text.trim(),
+        passwordController.text,
+      );
+      context.read<UserProvider>().setUser(result.user);
+      await AuthService.saveToken(result.token);
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => Homescreen()),
+      );
+    } catch (e) {
+      print('LOGIN ERROR: $e');
+    }
+  }
 
   @override
   void dispose() {
@@ -224,21 +243,6 @@ class _SigninScreenState extends State<SigninScreen> {
         ),
       ],
     );
-  }
-
-  Future<void> login() async {
-    try {
-      final result = await AuthService.login(
-        emailController.text.trim(),
-        passwordController.text,
-      );
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => UserScreen(user: result.user)),
-      );
-    } catch (e) {
-      print('LOGIN ERROR: $e');
-    }
   }
 
   ElevatedButton _signInBtn() {

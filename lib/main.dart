@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mixboxapp/screens/myfolder_screen.dart';
+import 'package:mixboxapp/providers/user_provider.dart';
+import 'package:mixboxapp/screens/signin_screen.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // 2. Ép Status Bar thành trong suốt và hiện icon màu tối
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      // Trong suốt hoàn toàn
       statusBarIconBrightness: Brightness.dark,
-      // Icon (pin, wifi) màu đen cho Android
-      statusBarBrightness: Brightness.light, // Icon màu đen cho iOS
+      statusBarBrightness: Brightness.light,
     ),
   );
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(create: (_) => UserProvider(), child: const MyApp()),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
         textTheme: const TextTheme().apply(bodyColor: Colors.black),
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyfolderScreen(),
+      home: const SigninScreen(),
     );
   }
 }

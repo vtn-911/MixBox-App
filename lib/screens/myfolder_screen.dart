@@ -42,28 +42,31 @@ class _MyFolderState extends State<MyfolderScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'My Folders',
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              'Organize your study materials efficiently.',
-              style: TextStyle(fontSize: 16, color: Color(0xff464555)),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [_btnUpDoc(), _btnCreateFolder()],
-            ),
-            const SizedBox(height: 16),
-            lvFolders(),
-          ],
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'My Folders',
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                'Organize your study materials efficiently.',
+                style: TextStyle(fontSize: 16, color: Color(0xff464555)),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [_btnUpDoc(), _btnCreateFolder()],
+              ),
+              const SizedBox(height: 16),
+              lvFolders(),
+            ],
+          ),
         ),
       ),
     );
@@ -209,7 +212,7 @@ class _MyFolderState extends State<MyfolderScreen> {
       ),
       style: ElevatedButton.styleFrom(
         backgroundColor: const Color(0xFF3B28CC),
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 70),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 60),
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),

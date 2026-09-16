@@ -2,12 +2,24 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:mixboxapp/service/auth_service.dart';
 
 class ApiService {
   static const String baseUrl = 'http://10.0.2.2:3000';
 
+  static Future<String?> getToken() async {
+    return await AuthService.getToken();
+  }
+
   static Future<Map<String, dynamic>> get(String endpoint) async {
-    final response = await http.get(Uri.parse('$baseUrl$endpoint'));
+    final token = await getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl$endpoint'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+      },
+    );
     return _handleResponse(response);
   }
 
@@ -15,9 +27,14 @@ class ApiService {
     String endpoint,
     Map<String, dynamic> body,
   ) async {
+    final token = await getToken();
     final response = await http.post(
       Uri.parse('$baseUrl$endpoint'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+      },
+
       body: jsonEncode(body),
     );
 

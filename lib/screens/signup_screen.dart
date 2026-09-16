@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mixboxapp/screens/homescreen.dart';
 import 'package:mixboxapp/screens/signin_screen.dart';
-import 'package:mixboxapp/screens/user_screen.dart';
 import 'package:mixboxapp/service/auth_service.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -48,9 +48,35 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
+  Future<void> _register() async {
+    try {
+      final result = await AuthService.register(
+        fullnameCtrl.text.trim(),
+        emailCtrl.text.trim(),
+        passwordCtrl.text.trim(),
+        avatarFile,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Dang ky thanh cong'),
+          duration: Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => Homescreen()),
+      );
+    } catch (e) {
+      print('Register Error: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: _appBar(),
       backgroundColor: const Color(0xffF8F9FA),
       body: SafeArea(
         child: Center(
@@ -202,21 +228,18 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  Future<void> _register() async {
-    try {
-      final result = await AuthService.register(
-        fullnameCtrl.text.trim(),
-        emailCtrl.text.trim(),
-        passwordCtrl.text.trim(),
-        avatarFile,
-      );
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => UserScreen(user: result.user)),
-      );
-    } catch (e) {
-      print('Register Error: $e');
-    }
+  AppBar _appBar() {
+    return AppBar(
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 10),
+        child: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(Icons.arrow_back, size: 30),
+        ),
+      ),
+    );
   }
 
   ElevatedButton _btnCreateAcc() {

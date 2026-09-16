@@ -5,6 +5,7 @@ import 'package:mixboxapp/models/documents_model.dart';
 import 'package:mixboxapp/screens/document_detail_screen.dart';
 import 'package:mixboxapp/service/categories_service.dart';
 import 'package:mixboxapp/service/document_service.dart';
+import 'package:mixboxapp/utils/auth_guard.dart';
 
 class Studyscreen extends StatefulWidget {
   const Studyscreen({super.key});
@@ -74,21 +75,24 @@ class _StudyScreenState extends State<Studyscreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _searchDocs(),
-            const SizedBox(height: 16),
-            _txtCategories('Categories'),
-            const SizedBox(height: 16),
-            _lvCategories(),
-            const SizedBox(height: 16),
-            _txtCategories('Recommended for you'),
-            const SizedBox(height: 16),
-            _lvDocments(),
-          ],
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _searchDocs(),
+              const SizedBox(height: 16),
+              _txtCategories('Categories'),
+              const SizedBox(height: 16),
+              _lvCategories(),
+              const SizedBox(height: 16),
+              _txtCategories('Recommended for you'),
+              const SizedBox(height: 16),
+              _lvDocments(),
+            ],
+          ),
         ),
       ),
     );
@@ -108,7 +112,10 @@ class _StudyScreenState extends State<Studyscreen> {
         itemBuilder: (context, index) {
           final item = listAllDoc[index];
           return InkWell(
-            onTap: () {
+            onTap: () async {
+              final allowed = await AuthGuard.requireAuth(context);
+              if (!allowed) return;
+              if (!context.mounted) return;
               Navigator.push(
                 context,
                 MaterialPageRoute(
