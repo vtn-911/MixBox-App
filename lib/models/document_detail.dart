@@ -4,6 +4,7 @@ class DocumentDetail {
   String id;
   String title;
   String description;
+  String fileUrl;
   String fileType;
   int fileSize;
   int pageCount;
@@ -17,6 +18,7 @@ class DocumentDetail {
     required this.id,
     required this.title,
     required this.description,
+    required this.fileUrl,
     required this.fileType,
     required this.fileSize,
     required this.pageCount,
@@ -32,6 +34,7 @@ class DocumentDetail {
       id: json['id'],
       title: json['title'],
       description: json['description'],
+      fileUrl: json['file_url'],
       fileType: json['file_type'],
       fileSize: json['file_size'],
       pageCount: json['page_count'],

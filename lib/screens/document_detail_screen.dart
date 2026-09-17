@@ -1,8 +1,8 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mixboxapp/models/document_detail.dart';
 import 'package:mixboxapp/service/document_service.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 class DocumentDetailScreen extends StatefulWidget {
   final String id;
@@ -15,18 +15,24 @@ class DocumentDetailScreen extends StatefulWidget {
 
 class _DocumentDetailState extends State<DocumentDetailScreen> {
   DocumentDetail? dcmDetail;
+  late PdfViewerController _pdfViewerController;
 
   @override
   void initState() {
     super.initState();
     loadDocumentDetail();
+    _pdfViewerController = PdfViewerController();
+  }
+
+  @override
+  void dispose() {
+    _pdfViewerController.dispose();
+    super.dispose();
   }
 
   Future<void> loadDocumentDetail() async {
     final data = await DocumentService.getDocumentById(widget.id);
-
     if (!mounted) return;
-
     setState(() {
       dcmDetail = data;
     });
@@ -39,15 +45,78 @@ class _DocumentDetailState extends State<DocumentDetailScreen> {
     }
 
     return Scaffold(
-      appBar: _appBar(),
-      body: CustomScrollView(
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            sliver: SliverToBoxAdapter(
+      appBar: _appBar(context),
+      body: SfPdfViewer.network(
+        dcmDetail!.fileUrl,
+        controller: _pdfViewerController,
+        enableDoubleTapZooming: true,
+        canShowScrollHead: true,
+        canShowScrollStatus: true,
+        onDocumentLoadFailed: (PdfDocumentLoadFailedDetails details) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Lỗi tải PDF: ${details.description}')),
+          );
+        },
+      ),
+    );
+  }
+
+  AppBar _appBar(BuildContext context) {
+    return AppBar(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      leading: IconButton(
+        onPressed: () => Navigator.pop(context),
+        icon: const Icon(Icons.arrow_back, color: Colors.black),
+      ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.info_outline, color: Colors.black),
+          onPressed: () => _showDocumentInfoModal(context),
+        ),
+        IconButton(
+          onPressed: () {},
+          icon: const Icon(Icons.bookmark_outline, color: Colors.black),
+        ),
+        IconButton(
+          onPressed: () {},
+          icon: const Icon(Icons.save_alt_outlined, color: Colors.black),
+        ),
+      ],
+    );
+  }
+
+  void _showDocumentInfoModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Color(0xffF8F9FA),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.5,
+          maxChildSize: 0.9,
+          builder: (_, scrollController) {
+            return SingleChildScrollView(
+              controller: scrollController,
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   _category(),
                   const SizedBox(height: 16),
                   _titleDocument(),
@@ -57,62 +126,13 @@ class _DocumentDetailState extends State<DocumentDetailScreen> {
                   _infoTypeFile(),
                   const SizedBox(height: 16),
                   _txtDescription(),
-                  const SizedBox(height: 16),
                 ],
               ),
-            ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            sliver: SliverList(delegate: _listImage()),
-          ),
-        ],
-      ),
+            );
+          },
+        );
+      },
     );
-  }
-
-  SliverChildBuilderDelegate _listImage() {
-    return SliverChildBuilderDelegate((context, index) {
-      final page = dcmDetail!.pages[index];
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 16),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600, maxHeight: 1000),
-            child: CachedNetworkImage(
-              imageUrl: page.pageURL,
-              width: double.infinity,
-              fit: BoxFit.fitWidth,
-              memCacheWidth: 600,
-              placeholder: (context, url) {
-                return AspectRatio(
-                  aspectRatio: 1 / 1.414,
-                  child: Container(
-                    color: Colors.grey[100],
-                    child: const Center(
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  ),
-                );
-              },
-              errorWidget: (context, url, error) {
-                return Container(
-                  height: 200,
-                  color: Colors.grey[100],
-                  child: const Center(
-                    child: Icon(
-                      Icons.broken_image,
-                      color: Colors.grey,
-                      size: 36,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-      );
-    }, childCount: dcmDetail!.pages.length);
   }
 
   Container _txtDescription() {
@@ -338,32 +358,6 @@ class _DocumentDetailState extends State<DocumentDetailScreen> {
           fontWeight: FontWeight.w500,
         ),
       ),
-    );
-  }
-
-  AppBar _appBar() {
-    return AppBar(
-      leading: Padding(
-        padding: const EdgeInsets.only(left: 10),
-        child: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: const Icon(Icons.arrow_back, size: 30),
-        ),
-      ),
-      actions: [
-        IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.bookmark_outline, size: 30),
-        ),
-        const SizedBox(width: 4),
-        IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.save_alt_outlined, size: 30),
-        ),
-        const SizedBox(width: 10),
-      ],
     );
   }
 }
