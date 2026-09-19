@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/user_model.dart';
@@ -37,7 +37,7 @@ class AuthService {
     String fullname,
     String email,
     String password,
-    File? file,
+    PlatformFile? file,
   ) async {
     final response = await ApiService.postMultipart(
       endpoint: '/api/auth/register',

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:mixboxapp/models/document_detail.dart';
 import 'package:mixboxapp/models/documents_model.dart';
@@ -64,5 +65,34 @@ class DocumentService {
           .toList();
     }
     throw Exception('Failed to search documents');
+  }
+
+  static Future<Map<String, dynamic>> createDocument({
+    required String title,
+    required String? categoryID,
+    required String? folderID,
+    required String? description,
+    required PlatformFile file,
+    required String? visibility,
+    PlatformFile? thumbnailFile,
+  }) async {
+    final response = await ApiService.postMultipart(
+      endpoint: '/api/documents',
+      fields: {
+        'title': title,
+        'category_id': ?categoryID,
+        'description': ?description,
+        'folder_id': ?folderID,
+        'visibility': ?visibility,
+      },
+      file: file,
+      fileField: 'document',
+      thumbnailFile: thumbnailFile,
+    );
+    final data = jsonDecode(response.body);
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return data as Map<String, dynamic>;
+    }
+    throw Exception(data['message'] ?? 'Create document failed');
   }
 }

@@ -2,6 +2,8 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:mixboxapp/models/folder_model.dart';
+import 'package:mixboxapp/screens/studyscreen.dart';
+import 'package:mixboxapp/service/document_service.dart';
 import 'package:mixboxapp/service/folder_service.dart';
 
 import '../models/categoriesModel.dart';
@@ -24,6 +26,7 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
   bool isLoadingCategories = true;
   bool isLoadingFolders = true;
   PlatformFile? selectedFile;
+  String? visibilityValue = "PUBLIC";
 
   @override
   void initState() {
@@ -37,6 +40,30 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
     docNameCtrl.dispose();
     descCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> createDocument() async {
+    try {
+      final result = await DocumentService.createDocument(
+        title: docNameCtrl.text.trim(),
+        categoryID: selectedSubject,
+        folderID: selectedFolder,
+        description: descCtrl.text.trim(),
+        visibility: visibilityValue,
+        file: selectedFile!,
+      );
+      if (result['success'] == true) {
+        if (!mounted) return;
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const Studyscreen()),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.toString())));
+    }
   }
 
   Future<void> pickFile() async {
@@ -148,9 +175,13 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
           const SizedBox(height: 5),
           _drdSubject(),
           const SizedBox(height: 16),
-          _txtTitle('Folder'),
+          _txtTitle('FOLDER'),
           const SizedBox(height: 5),
           _drdFolder(),
+          const SizedBox(height: 16),
+          _txtTitle('VISIBILITY'),
+          const SizedBox(height: 5),
+          _rdVisibility(),
           const SizedBox(height: 16),
           _txtTitle('DESCRIPTION'),
           const SizedBox(height: 5),
@@ -168,9 +199,36 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
     );
   }
 
+  RadioGroup<String> _rdVisibility() {
+    return RadioGroup<String>(
+      groupValue: visibilityValue,
+      onChanged: (String? value) {
+        setState(() {
+          visibilityValue = value;
+        });
+      },
+      child: Row(
+        children: [
+          Row(
+            children: [
+              Radio<String>(value: 'PUBLIC'),
+              Text('Public'),
+            ],
+          ),
+          Row(
+            children: [
+              Radio<String>(value: 'PRIVATE'),
+              Text('Private'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   ElevatedButton _btnUpload() {
     return ElevatedButton.icon(
-      onPressed: () {},
+      onPressed: createDocument,
       icon: const Icon(
         Icons.file_upload_outlined,
         size: 20,
@@ -191,7 +249,9 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
 
   OutlinedButton _btnCancel() {
     return OutlinedButton(
-      onPressed: () {},
+      onPressed: () {
+        Navigator.pop(context);
+      },
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 24),
         side: const BorderSide(color: Color(0xFFC7C4D8), width: 1.5),

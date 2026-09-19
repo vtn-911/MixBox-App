@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mixboxapp/models/folder_model.dart';
 import 'package:mixboxapp/screens/folderdetail_screen.dart';
+import 'package:mixboxapp/screens/uploaddocument_screen.dart';
 import 'package:mixboxapp/service/folder_service.dart';
 
 class MyfolderScreen extends StatefulWidget {
@@ -221,7 +222,12 @@ class _MyFolderState extends State<MyfolderScreen> {
 
   ElevatedButton _btnUpDoc() {
     return ElevatedButton.icon(
-      onPressed: () {},
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const UploadDocumentScreen()),
+        );
+      },
       label: const Text(
         'Upload Document',
         style: TextStyle(fontSize: 14, color: Color(0xFF3B28CC)),

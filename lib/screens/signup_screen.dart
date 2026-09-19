@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mixboxapp/screens/homescreen.dart';
@@ -15,7 +16,7 @@ class SignupScreen extends StatefulWidget {
 
 class _SignupScreenState extends State<SignupScreen> {
   final bool _obscurePassword = true;
-  File? avatarFile;
+  PlatformFile? avatarFile;
   TextEditingController fullnameCtrl = TextEditingController();
   TextEditingController emailCtrl = TextEditingController();
   TextEditingController passwordCtrl = TextEditingController();
@@ -264,7 +265,7 @@ class _SignupScreenState extends State<SignupScreen> {
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
       setState(() {
-        avatarFile = File(image.path);
+        avatarFile = image.path as PlatformFile?;
       });
     }
   }
@@ -291,7 +292,7 @@ class _SignupScreenState extends State<SignupScreen> {
               child: ClipOval(
                 child: avatarFile != null
                     ? Image.file(
-                        avatarFile!,
+                        avatarFile! as File,
                         width: 64,
                         height: 64,
                         fit: BoxFit.cover,
