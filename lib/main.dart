@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mixboxapp/providers/user_provider.dart';
-import 'package:mixboxapp/screens/signin_screen.dart';
+import 'package:mixboxapp/screens/uploaddocument_screen.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
         textTheme: const TextTheme().apply(bodyColor: Colors.black),
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const SigninScreen(),
+      home: const UploadDocumentScreen(),
     );
   }
 }

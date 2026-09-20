@@ -6,6 +6,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:mixboxapp/screens/homescreen.dart';
 import 'package:mixboxapp/screens/signin_screen.dart';
 import 'package:mixboxapp/service/auth_service.dart';
+import 'package:provider/provider.dart';
+
+import '../providers/user_provider.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -57,7 +60,8 @@ class _SignupScreenState extends State<SignupScreen> {
         passwordCtrl.text.trim(),
         avatarFile,
       );
-      if (!mounted) return;
+      context.read<UserProvider>().setUser(result.user);
+      await AuthService.saveToken(result.token);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Dang ky thanh cong'),

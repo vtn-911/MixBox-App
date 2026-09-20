@@ -5,6 +5,7 @@ import 'package:mixboxapp/models/folder_model.dart';
 import 'package:mixboxapp/screens/studyscreen.dart';
 import 'package:mixboxapp/service/document_service.dart';
 import 'package:mixboxapp/service/folder_service.dart';
+import 'package:mixboxapp/widgets/forminput_document.dart';
 
 import '../models/categoriesModel.dart';
 import '../service/categories_service.dart';
@@ -26,7 +27,7 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
   bool isLoadingCategories = true;
   bool isLoadingFolders = true;
   PlatformFile? selectedFile;
-  String? visibilityValue = "PUBLIC";
+  String? visibilityValue;
 
   @override
   void initState() {
@@ -167,59 +168,34 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
           const SizedBox(height: 16),
           _previewFile(),
           _lineStroke(),
-          _txtTitle('DOCUMENT NAME'),
-          const SizedBox(height: 5),
-          _inputInfo('Enter document name', docNameCtrl),
-          const SizedBox(height: 16),
-          _txtTitle('SUBJECT'),
-          const SizedBox(height: 5),
-          _drdSubject(),
-          const SizedBox(height: 16),
-          _txtTitle('FOLDER'),
-          const SizedBox(height: 5),
-          _drdFolder(),
-          const SizedBox(height: 16),
-          _txtTitle('VISIBILITY'),
-          const SizedBox(height: 5),
-          _rdVisibility(),
-          const SizedBox(height: 16),
-          _txtTitle('DESCRIPTION'),
-          const SizedBox(height: 5),
-          _inputInfo(
-            "Add any extra context or notes about this document...",
-            descCtrl,
+          ForminputDocument(
+            docNameCtrl: docNameCtrl,
+            descCtrl: descCtrl,
+            categories: categories,
+            folders: folders,
+            isLoadingCategories: isLoadingCategories,
+            isLoadingFolders: isLoadingFolders,
+            visibilityValue: visibilityValue,
+            onSubjectChanged: (value) {
+              setState(() {
+                selectedSubject = value;
+              });
+            },
+            onFolderChanged: (value) {
+              setState(() {
+                selectedSubject = value;
+              });
+            },
+            onVisibilityChanged: (value) {
+              setState(() {
+                visibilityValue = value;
+              });
+            },
           ),
           const SizedBox(height: 32),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [_btnCancel(), const SizedBox(width: 16), _btnUpload()],
-          ),
-        ],
-      ),
-    );
-  }
-
-  RadioGroup<String> _rdVisibility() {
-    return RadioGroup<String>(
-      groupValue: visibilityValue,
-      onChanged: (String? value) {
-        setState(() {
-          visibilityValue = value;
-        });
-      },
-      child: Row(
-        children: [
-          Row(
-            children: [
-              Radio<String>(value: 'PUBLIC'),
-              Text('Public'),
-            ],
-          ),
-          Row(
-            children: [
-              Radio<String>(value: 'PRIVATE'),
-              Text('Private'),
-            ],
           ),
         ],
       ),
@@ -260,190 +236,6 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
       child: const Text(
         'Cancel',
         style: TextStyle(color: Color(0xFF464555), fontSize: 14),
-      ),
-    );
-  }
-
-  Widget _drdFolder() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return DropdownMenu<String>(
-          width: constraints.maxWidth,
-          initialSelection: selectedFolder,
-          menuHeight: 200,
-          trailingIcon: const Icon(
-            Icons.keyboard_arrow_down_rounded,
-            size: 20,
-            color: Color(0xff77778A),
-          ),
-          hintText: isLoadingFolders ? 'Loading folders...' : 'Select folder',
-          textStyle: const TextStyle(fontSize: 16, color: Color(0xff30303A)),
-          menuStyle: MenuStyle(
-            backgroundColor: WidgetStateProperty.all<Color>(Colors.white),
-            elevation: WidgetStateProperty.all<double>(4),
-            shape: WidgetStateProperty.all<OutlinedBorder>(
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          ),
-          dropdownMenuEntries: folders.map((folder) {
-            return DropdownMenuEntry<String>(
-              value: folder.id,
-              label: folder.nameFolder,
-              style: MenuItemButton.styleFrom(
-                textStyle: const TextStyle(
-                  fontSize: 16,
-                  color: Color(0xff30303A),
-                ),
-              ),
-            );
-          }).toList(),
-          onSelected: isLoadingFolders
-              ? null
-              : (value) {
-                  setState(() {
-                    selectedFolder = value;
-                  });
-                },
-          inputDecorationTheme: InputDecorationTheme(
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color(0xff898797),
-                width: 1.5,
-              ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color(0xff898797),
-                width: 1.5,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xff5146E5), width: 2),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _drdSubject() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return DropdownMenu<String>(
-          width: constraints.maxWidth,
-          initialSelection: selectedSubject,
-          menuHeight: 200,
-          trailingIcon: const Icon(
-            Icons.keyboard_arrow_down_rounded,
-            size: 20,
-            color: Color(0xff77778A),
-          ),
-          hintText: isLoadingCategories
-              ? 'Loading categories...'
-              : 'Select subject',
-          textStyle: const TextStyle(fontSize: 16, color: Color(0xff30303A)),
-          menuStyle: MenuStyle(
-            backgroundColor: WidgetStateProperty.all<Color>(Colors.white),
-            elevation: WidgetStateProperty.all<double>(4),
-            shape: WidgetStateProperty.all<OutlinedBorder>(
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          ),
-          dropdownMenuEntries: categories.map((category) {
-            return DropdownMenuEntry<String>(
-              value: category.idCategory,
-              label: category.nameCategory,
-              style: MenuItemButton.styleFrom(
-                textStyle: const TextStyle(
-                  fontSize: 16,
-                  color: Color(0xff30303A),
-                ),
-              ),
-            );
-          }).toList(),
-          onSelected: isLoadingCategories
-              ? null
-              : (value) {
-                  setState(() {
-                    selectedSubject = value;
-                  });
-                },
-          inputDecorationTheme: InputDecorationTheme(
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color(0xff898797),
-                width: 1.5,
-              ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color(0xff898797),
-                width: 1.5,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xff5146E5), width: 2),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  TextField _inputInfo(String txtHint, TextEditingController? controller) {
-    return TextField(
-      controller: controller,
-      maxLines: null,
-      textInputAction: TextInputAction.done,
-      decoration: InputDecoration(
-        hintText: txtHint,
-        hintStyle: TextStyle(color: Color(0xffC7C4D8)),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 10,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xffC7C4D8), width: 1),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xff777587), width: 1),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xff5146E5), width: 1.5),
-        ),
-      ),
-      style: const TextStyle(fontSize: 16),
-    );
-  }
-
-  Text _txtTitle(String title) {
-    return Text(
-      title,
-      style: TextStyle(
-        fontSize: 12,
-        color: Color(0xff464555),
-        fontWeight: FontWeight.bold,
       ),
     );
   }
