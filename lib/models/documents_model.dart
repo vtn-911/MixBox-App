@@ -16,12 +16,25 @@ class DocumentsModel {
   });
 
   factory DocumentsModel.fromJson(Map<String, dynamic> json) {
+    String category = '';
+    String owner = '';
+
+    if (json['category'] is String) {
+      category = json['category'];
+    } else if (json['category'] is Map) {
+      category = json['category']['name'] ?? '';
+    }
+    if (json['owner'] is String) {
+      owner = json['owner'];
+    } else if (json['owner'] is Map) {
+      owner = json['owner']['full_name'] ?? '';
+    }
     return DocumentsModel(
       id: json['id'],
       title: json['title'],
       pageCount: json['page_count'],
-      category: json['category'],
-      owner: json['owner'],
+      category: category,
+      owner: owner,
     );
   }
 }

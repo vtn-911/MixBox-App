@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:http/http.dart' as http;
 import 'package:mixboxapp/models/document_detail.dart';
 import 'package:mixboxapp/models/documents_model.dart';
 import 'package:mixboxapp/service/api_service.dart';
@@ -17,6 +16,29 @@ class DocumentService {
     final response = await ApiService.get('/api/documents/$documentId');
     final data = response['data'];
     return DocumentDetail.fromJson(data);
+  }
+
+  static Future<bool> updateDocument(
+    String docId,
+    String? title,
+    String? description,
+    String? categoryId,
+    String? folderId,
+    String? visibility,
+  ) async {
+    try {
+      await ApiService.put('/api/documents/$docId', {
+        if (title != null) 'title': title,
+        if (description != null) 'description': description,
+        if (categoryId != null) 'category_id': categoryId,
+        if (folderId != null) 'folder_id': folderId,
+        if (visibility != null) 'visibility': visibility,
+      });
+      return true;
+    } catch (e) {
+      print('UPDATE DOCUMENT ERROR: $e');
+      return false;
+    }
   }
 
   static Future<List<DocumentsModel>> searchDocuments({
@@ -36,35 +58,26 @@ class DocumentService {
       queryParams['query'] = query.trim();
     }
 
-    if (categoryId != null) {
+    if (categoryId != null && categoryId.isNotEmpty) {
       queryParams['category_id'] = categoryId;
     }
 
-    if (folderId != null) {
+    if (folderId != null && folderId.isNotEmpty) {
       queryParams['folder_id'] = folderId;
     }
 
-    if (visibility != null) {
+    if (visibility != null && visibility.isNotEmpty) {
       queryParams['visibility'] = visibility;
     }
 
-    final uri = Uri.parse('${ApiService.baseUrl}/api/documents/search')
-        .replace(queryParameters: queryParams);
+    final queryString = Uri(queryParameters: queryParams).query;
 
-    final response = await http.get(uri);
+    final response = await ApiService.get('/api/documents/search?$queryString');
 
-    if (response.statusCode == 200) {
-      final body = jsonDecode(response.body);
+    final data = response['data'];
+    final List documentsJson = data['documents'];
 
-      final data = body['data'];
-
-      final List documentsJson = data['documents'];
-
-      return documentsJson
-          .map((json) => DocumentsModel.fromJson(json))
-          .toList();
-    }
-    throw Exception('Failed to search documents');
+    return documentsJson.map((json) => DocumentsModel.fromJson(json)).toList();
   }
 
   static Future<Map<String, dynamic>> createDocument({

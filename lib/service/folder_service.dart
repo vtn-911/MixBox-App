@@ -13,9 +13,7 @@ class FolderService {
     String folderID,
   ) async {
     final response = await ApiService.get('/api/folders/$folderID/documents');
-
     final data = response['data'] as List;
-
     return data.map((json) => FolderDocuments.fromJson(json)).toList();
   }
 }

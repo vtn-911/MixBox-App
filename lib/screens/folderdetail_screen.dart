@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:mixboxapp/models/categoriesModel.dart';
 import 'package:mixboxapp/models/folder_documents.dart';
+import 'package:mixboxapp/models/folder_model.dart';
 import 'package:mixboxapp/screens/document_detail_screen.dart';
+import 'package:mixboxapp/service/document_service.dart';
 import 'package:mixboxapp/service/folder_service.dart';
+import 'package:mixboxapp/widgets/forminput_document.dart';
+
+import '../service/categories_service.dart';
 
 class FolderdetailScreen extends StatefulWidget {
   final String folderID;
@@ -20,6 +26,72 @@ class FolderdetailScreen extends StatefulWidget {
 
 class _FolderDetailState extends State<FolderdetailScreen> {
   List<FolderDocuments>? listDoc = [];
+  final TextEditingController docNameCtrl = TextEditingController();
+  final TextEditingController descCtrl = TextEditingController();
+
+  List<Categoriesmodel> categories = [];
+  List<FolderModel> folders = [];
+  bool isLoadingCategories = false;
+  bool isLoadingFolders = false;
+
+  String? selectedCategory;
+  String? selectedFolder;
+  String? visibilityValue = 'public';
+
+  @override
+  void initState() {
+    super.initState();
+    loadListDoc();
+    loadFolders();
+    loadCategories();
+  }
+
+  @override
+  void dispose() {
+    docNameCtrl.dispose();
+    descCtrl.dispose();
+    super.dispose();
+  }
+
+  void fillFormWithItem(FolderDocuments item) {
+    docNameCtrl.text = item.title;
+    descCtrl.text = item.description;
+    selectedCategory = item.categoryID;
+    selectedFolder = widget.folderID;
+    visibilityValue = item.visibilityDoc;
+  }
+
+  Future<void> loadFolders() async {
+    try {
+      final result = await FolderService.listFolder(
+        '030a3dc8-2e22-42d9-b36e-a0f567e80e6c',
+      );
+      setState(() {
+        folders = result;
+        isLoadingFolders = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoadingFolders = false;
+      });
+      debugPrint('Load folders error: $e');
+    }
+  }
+
+  Future<void> loadCategories() async {
+    try {
+      final result = await CategoriesService.listCategories();
+      setState(() {
+        categories = result;
+        isLoadingCategories = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoadingCategories = false;
+      });
+      debugPrint('Load categories error: $e');
+    }
+  }
 
   Future<void> loadListDoc() async {
     try {
@@ -33,12 +105,6 @@ class _FolderDetailState extends State<FolderdetailScreen> {
     } catch (e) {
       debugPrint('Load List Document (Folder) Error: $e');
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    loadListDoc();
   }
 
   @override
@@ -57,7 +123,9 @@ class _FolderDetailState extends State<FolderdetailScreen> {
       itemCount: listDoc!.length,
       itemBuilder: (context, index) {
         final item = listDoc![index];
-        return InkWell(
+        Offset tapPosition = Offset.zero;
+        return GestureDetector(
+          onTapDown: (details) => tapPosition = details.globalPosition,
           onTap: () {
             Navigator.push(
               context,
@@ -65,6 +133,136 @@ class _FolderDetailState extends State<FolderdetailScreen> {
                 builder: (context) => DocumentDetailScreen(id: item.id),
               ),
             );
+          },
+          onLongPress: () async {
+            final RenderBox overlay =
+                Overlay.of(context).context.findRenderObject() as RenderBox;
+            final selectedValue = await _showMenu_Document(
+              context,
+              tapPosition,
+              overlay,
+            );
+            if (!context.mounted || selectedValue == null) return;
+            switch (selectedValue) {
+              case 'edit':
+                fillFormWithItem(item);
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Color(0xffF8F9FA),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
+                  ),
+                  builder: (context) {
+                    return DraggableScrollableSheet(
+                      expand: false,
+                      initialChildSize: 0.5,
+                      maxChildSize: 0.9,
+                      builder: (_, scrollController) {
+                        return SingleChildScrollView(
+                          controller: scrollController,
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Center(
+                                child: Container(
+                                  width: 40,
+                                  height: 4,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[300],
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              ForminputDocument(
+                                docNameCtrl: docNameCtrl,
+                                descCtrl: descCtrl,
+                                categories: categories,
+                                folders: folders,
+                                isLoadingCategories: isLoadingCategories,
+                                isLoadingFolders: isLoadingFolders,
+                                selectedFolderId: selectedFolder,
+                                selectedSubjectId: selectedCategory,
+                                visibilityValue: visibilityValue,
+                                onSubjectChanged: (value) {
+                                  setState(() => selectedCategory = value);
+                                },
+                                onFolderChanged: (value) {
+                                  setState(() => selectedFolder = value);
+                                },
+                                onVisibilityChanged: (value) {
+                                  setState(() => visibilityValue = value);
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                onPressed: () async {
+                                  final isSuccessUpdate =
+                                      await DocumentService.updateDocument(
+                                        item.id,
+                                        docNameCtrl.text,
+                                        descCtrl.text,
+                                        selectedCategory,
+                                        selectedFolder,
+                                        visibilityValue,
+                                      );
+                                  if (!context.mounted) return;
+                                  if (isSuccessUpdate) {
+                                    Navigator.pop(context);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Document updated successfully',
+                                        ),
+                                      ),
+                                    );
+                                    loadListDoc();
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Failed to update document !!!',
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                                label: const Text(
+                                  'Update Document',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Color(0xFF3B28CC),
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF3B28CC)
+                                      .withValues(alpha: 0.05),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 10,
+                                    horizontal: 16,
+                                  ),
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    side: BorderSide(color: Color(0xFF3B28CC)),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                );
+                break;
+              case 'deleted':
+                break;
+            }
           },
           child: Container(
             margin: EdgeInsets.only(bottom: 10),
@@ -141,7 +339,7 @@ class _FolderDetailState extends State<FolderdetailScreen> {
                           borderRadius: BorderRadius.circular(9999),
                         ),
                         child: Text(
-                          item.category,
+                          item.categoryName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -198,6 +396,47 @@ class _FolderDetailState extends State<FolderdetailScreen> {
           ),
         );
       },
+    );
+  }
+
+  Future<String?> _showMenu_Document(
+    BuildContext context,
+    Offset tapPosition,
+    RenderBox overlay,
+  ) {
+    return showMenu<String>(
+      context: context,
+      position: RelativeRect.fromRect(
+        tapPosition & const Size(40, 40),
+        Offset.zero & overlay.size,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      items: [
+        const PopupMenuItem(
+          value: 'edit',
+          child: Row(
+            children: [
+              Icon(Icons.edit_outlined, size: 20, color: Color(0xff3525CD)),
+              SizedBox(width: 8),
+              Text(
+                'Edit',
+                style: TextStyle(fontSize: 13, color: Color(0xff3525CD)),
+              ),
+            ],
+          ),
+        ),
+        const PopupMenuDivider(),
+        const PopupMenuItem(
+          value: 'delete',
+          child: Row(
+            children: [
+              Icon(Icons.delete_forever_outlined, size: 20, color: Colors.red),
+              SizedBox(width: 8),
+              Text('Delete', style: TextStyle(fontSize: 13, color: Colors.red)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
