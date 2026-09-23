@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mixboxapp/providers/user_provider.dart';
+import 'package:mixboxapp/screens/signin_screen.dart';
 import 'package:provider/provider.dart';
+
+import '../service/auth_service.dart';
 
 class UserScreen extends StatefulWidget {
   const UserScreen({super.key});
@@ -10,6 +13,20 @@ class UserScreen extends StatefulWidget {
 }
 
 class _UserScreenState extends State<UserScreen> {
+  Future<void> _logout() async {
+    await AuthService.logout();
+
+    if (!mounted) return;
+
+    context.read<UserProvider>().clearUser();
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const SigninScreen()),
+      (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = context.watch<UserProvider>().user;
@@ -19,15 +36,11 @@ class _UserScreenState extends State<UserScreen> {
         child: SafeArea(child: Center(child: CircularProgressIndicator())),
       );
     }
-
-    final avatarUrl = user.avatarUrl;
-    final imageUrl = avatarUrl != null
-        ? 'http://10.0.2.2:3000$avatarUrl'
-        : null;
+    final imageUrl = user.avatarUrl;
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          child: Container(
+          child: SizedBox(
             width: double.infinity,
             child: Column(
               children: [
@@ -41,6 +54,26 @@ class _UserScreenState extends State<UserScreen> {
                 Text(
                   user.email,
                   style: TextStyle(fontSize: 16, color: Color(0xff464555)),
+                ),
+                const Spacer(),
+                ElevatedButton(
+                  onPressed: _logout,
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 0),
+                    backgroundColor: Colors.red,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: Text(
+                    'LOGOUT',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ],
             ),
