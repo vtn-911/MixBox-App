@@ -1,13 +1,13 @@
 import 'package:dotted_border/dotted_border.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:mixboxapp/models/folder_model.dart';
-import 'package:mixboxapp/screens/studyscreen.dart';
 import 'package:mixboxapp/service/document_service.dart';
-import 'package:mixboxapp/service/folder_service.dart';
 import 'package:mixboxapp/widgets/forminput_document.dart';
+import 'package:provider/provider.dart';
 
 import '../models/categoriesModel.dart';
+import '../providers/folder_provider.dart';
+import '../providers/user_provider.dart';
 import '../service/categories_service.dart';
 
 class UploadDocumentScreen extends StatefulWidget {
@@ -23,9 +23,7 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
   String? selectedSubject;
   String? selectedFolder;
   List<Categoriesmodel> categories = [];
-  List<FolderModel> folders = [];
   bool isLoadingCategories = true;
-  bool isLoadingFolders = true;
   PlatformFile? selectedFile;
   String? visibilityValue;
 
@@ -33,7 +31,12 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
   void initState() {
     super.initState();
     loadCategories();
-    loadFolders();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userId = context.read<UserProvider>().user?.id;
+      if (userId != null) {
+        context.read<FolderProvider>().fetchFolder(userId);
+      }
+    });
   }
 
   @override
@@ -41,6 +44,14 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
     docNameCtrl.dispose();
     descCtrl.dispose();
     super.dispose();
+  }
+
+  String? get _currentUserId => context.read<UserProvider>().user?.id;
+
+  void _refreshFolders() {
+    if (_currentUserId != null) {
+      context.read<FolderProvider>().fetchFolder(_currentUserId);
+    }
   }
 
   Future<void> createDocument() async {
@@ -55,10 +66,8 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
       );
       if (result['success'] == true) {
         if (!mounted) return;
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const Studyscreen()),
-        );
+        Navigator.pop(context);
+        _refreshFolders();
       }
     } catch (e) {
       if (!mounted) return;
@@ -80,23 +89,6 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
     }
   }
 
-  Future<void> loadFolders() async {
-    try {
-      final result = await FolderService.listFolder(
-        '030a3dc8-2e22-42d9-b36e-a0f567e80e6c',
-      );
-      setState(() {
-        folders = result;
-        isLoadingFolders = false;
-      });
-    } catch (e) {
-      setState(() {
-        isLoadingFolders = false;
-      });
-      debugPrint('Load folders error: $e');
-    }
-  }
-
   Future<void> loadCategories() async {
     try {
       final result = await CategoriesService.listCategories();
@@ -114,6 +106,7 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final folderProvider = context.watch<FolderProvider>();
     return Material(
       child: SafeArea(
         child: SingleChildScrollView(
@@ -131,7 +124,7 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
                 style: TextStyle(fontSize: 15),
               ),
               const SizedBox(height: 24),
-              _formUpload(),
+              _formUpload(folderProvider),
             ],
           ),
         ),
@@ -139,7 +132,7 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
     );
   }
 
-  Container _formUpload() {
+  Container _formUpload(FolderProvider folderProvider) {
     return Container(
       margin: EdgeInsets.only(bottom: 10),
       padding: EdgeInsets.all(16),
@@ -172,9 +165,9 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
             docNameCtrl: docNameCtrl,
             descCtrl: descCtrl,
             categories: categories,
-            folders: folders,
+            folders: folderProvider.folders,
             isLoadingCategories: isLoadingCategories,
-            isLoadingFolders: isLoadingFolders,
+            isLoadingFolders: folderProvider.isLoading,
             visibilityValue: visibilityValue,
             onSubjectChanged: (value) {
               setState(() {
@@ -183,7 +176,7 @@ class _UploadDocumentState extends State<UploadDocumentScreen> {
             },
             onFolderChanged: (value) {
               setState(() {
-                selectedSubject = value;
+                selectedFolder = value;
               });
             },
             onVisibilityChanged: (value) {

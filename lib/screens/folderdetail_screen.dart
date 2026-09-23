@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:mixboxapp/models/categoriesModel.dart';
 import 'package:mixboxapp/models/folder_documents.dart';
-import 'package:mixboxapp/models/folder_model.dart';
+import 'package:mixboxapp/providers/folder_provider.dart';
+import 'package:mixboxapp/providers/user_provider.dart';
 import 'package:mixboxapp/screens/document_detail_screen.dart';
 import 'package:mixboxapp/service/document_service.dart';
 import 'package:mixboxapp/service/folder_service.dart';
 import 'package:mixboxapp/widgets/forminput_document.dart';
+import 'package:provider/provider.dart';
 
 import '../service/categories_service.dart';
 
@@ -30,19 +32,16 @@ class _FolderDetailState extends State<FolderdetailScreen> {
   final TextEditingController descCtrl = TextEditingController();
 
   List<Categoriesmodel> categories = [];
-  List<FolderModel> folders = [];
   bool isLoadingCategories = false;
-  bool isLoadingFolders = false;
 
   String? selectedCategory;
   String? selectedFolder;
-  String? visibilityValue = 'public';
+  String? visibilityValue = 'PUBLIC';
 
   @override
   void initState() {
     super.initState();
     loadListDoc();
-    loadFolders();
     loadCategories();
   }
 
@@ -53,29 +52,59 @@ class _FolderDetailState extends State<FolderdetailScreen> {
     super.dispose();
   }
 
+  String? get _currentUserId => context.read<UserProvider>().user?.id;
+
+  void _refreshFolders() {
+    if (_currentUserId != null) {
+      context.read<FolderProvider>().fetchFolder(_currentUserId);
+    }
+  }
+
+  Future<void> handleDeleteDocument(String documentId) async {
+    final isSuccesDelete = await DocumentService.deletedDocument(documentId);
+    if (!mounted) return;
+    if (isSuccesDelete) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Documents deleted successfilly')),
+      );
+      loadListDoc();
+      _refreshFolders();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to delete document !!!')),
+      );
+    }
+  }
+
+  Future<void> handleUpdateDocument(String documentId) async {
+    final isSuccessUpdate = await DocumentService.updateDocument(
+      documentId,
+      docNameCtrl.text,
+      descCtrl.text,
+      selectedCategory,
+      selectedFolder,
+      visibilityValue,
+    );
+    if (!mounted) return;
+    if (isSuccessUpdate) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Document updated successfully')),
+      );
+      loadListDoc();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to update document !!!')),
+      );
+    }
+  }
+
   void fillFormWithItem(FolderDocuments item) {
     docNameCtrl.text = item.title;
     descCtrl.text = item.description;
     selectedCategory = item.categoryID;
     selectedFolder = widget.folderID;
     visibilityValue = item.visibilityDoc;
-  }
-
-  Future<void> loadFolders() async {
-    try {
-      final result = await FolderService.listFolder(
-        '030a3dc8-2e22-42d9-b36e-a0f567e80e6c',
-      );
-      setState(() {
-        folders = result;
-        isLoadingFolders = false;
-      });
-    } catch (e) {
-      setState(() {
-        isLoadingFolders = false;
-      });
-      debugPrint('Load folders error: $e');
-    }
   }
 
   Future<void> loadCategories() async {
@@ -109,16 +138,17 @@ class _FolderDetailState extends State<FolderdetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final folderProvider = context.watch<FolderProvider>();
     return Scaffold(
       appBar: _appBarFolderDetail(),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        child: _lvDocments(),
+        child: _lvDocments(folderProvider),
       ),
     );
   }
 
-  Widget _lvDocments() {
+  Widget _lvDocments(FolderProvider folderProvider) {
     return ListView.builder(
       itemCount: listDoc!.length,
       itemBuilder: (context, index) {
@@ -182,9 +212,9 @@ class _FolderDetailState extends State<FolderdetailScreen> {
                                 docNameCtrl: docNameCtrl,
                                 descCtrl: descCtrl,
                                 categories: categories,
-                                folders: folders,
+                                folders: folderProvider.folders,
                                 isLoadingCategories: isLoadingCategories,
-                                isLoadingFolders: isLoadingFolders,
+                                isLoadingFolders: folderProvider.isLoading,
                                 selectedFolderId: selectedFolder,
                                 selectedSubjectId: selectedCategory,
                                 visibilityValue: visibilityValue,
@@ -200,37 +230,7 @@ class _FolderDetailState extends State<FolderdetailScreen> {
                               ),
                               const SizedBox(height: 16),
                               ElevatedButton.icon(
-                                onPressed: () async {
-                                  final isSuccessUpdate =
-                                      await DocumentService.updateDocument(
-                                        item.id,
-                                        docNameCtrl.text,
-                                        descCtrl.text,
-                                        selectedCategory,
-                                        selectedFolder,
-                                        visibilityValue,
-                                      );
-                                  if (!context.mounted) return;
-                                  if (isSuccessUpdate) {
-                                    Navigator.pop(context);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Document updated successfully',
-                                        ),
-                                      ),
-                                    );
-                                    loadListDoc();
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Failed to update document !!!',
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                },
+                                onPressed: () => handleUpdateDocument(item.id),
                                 label: const Text(
                                   'Update Document',
                                   style: TextStyle(
@@ -260,7 +260,8 @@ class _FolderDetailState extends State<FolderdetailScreen> {
                   },
                 );
                 break;
-              case 'deleted':
+              case 'delete':
+                handleDeleteDocument(item.id);
                 break;
             }
           },

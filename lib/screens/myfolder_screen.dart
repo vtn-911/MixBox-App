@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:mixboxapp/models/folder_model.dart';
+import 'package:mixboxapp/providers/folder_provider.dart';
+import 'package:mixboxapp/providers/user_provider.dart';
 import 'package:mixboxapp/screens/folderdetail_screen.dart';
 import 'package:mixboxapp/screens/uploaddocument_screen.dart';
-import 'package:mixboxapp/service/folder_service.dart';
+import 'package:provider/provider.dart';
 
 class MyfolderScreen extends StatefulWidget {
   const MyfolderScreen({super.key});
@@ -12,33 +13,15 @@ class MyfolderScreen extends StatefulWidget {
 }
 
 class _MyFolderState extends State<MyfolderScreen> {
-  List<FolderModel> listFolder = [];
-  bool isLoading = true;
-
   @override
   void initState() {
     super.initState();
-    loadListFolder();
-  }
-
-  Future<void> loadListFolder() async {
-    try {
-      final result = await FolderService.listFolder(
-        '030a3dc8-2e22-42d9-b36e-a0f567e80e6c',
-      );
-      setState(() {
-        listFolder = result;
-        isLoading = false;
-      });
-    } catch (e) {
-      debugPrint('Load Folder Error: $e');
-    } finally {
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userId = context.read<UserProvider>().user?.id;
+      if (userId != null) {
+        context.read<FolderProvider>().fetchFolder(userId);
       }
-    }
+    });
   }
 
   @override
@@ -74,6 +57,9 @@ class _MyFolderState extends State<MyfolderScreen> {
   }
 
   Expanded lvFolders() {
+    final folderProvider = context.watch<FolderProvider>();
+    final listFolder = folderProvider.folders;
+    final isLoading = folderProvider.isLoading;
     return Expanded(
       child: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -176,7 +162,6 @@ class _MyFolderState extends State<MyfolderScreen> {
   String getUpdatedTime(dynamic updateAt) {
     if (updateAt == null) return 'Updated recently';
 
-    // 💡 Parse chuỗi String từ API sang DateTime
     final DateTime parsedDate = updateAt is String
         ? (DateTime.tryParse(updateAt) ?? DateTime.now())
         : (updateAt as DateTime);

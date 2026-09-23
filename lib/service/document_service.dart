@@ -41,6 +41,16 @@ class DocumentService {
     }
   }
 
+  static Future<bool> deletedDocument(String docId) async {
+    try {
+      await ApiService.delete('/api/documents/$docId', {'documentId': docId});
+      return true;
+    } catch (e) {
+      print('DELETE DOCUMENT ERROR: $e');
+      return false;
+    }
+  }
+
   static Future<List<DocumentsModel>> searchDocuments({
     String? query,
     String? categoryId,

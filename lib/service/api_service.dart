@@ -56,6 +56,22 @@ class ApiService {
     return _handleResponse(response);
   }
 
+  static Future<Map<String, dynamic>> delete(
+    String endpoint,
+    Map<String, dynamic> body,
+  ) async {
+    final token = await getToken();
+    final response = await http.delete(
+      Uri.parse('$baseUrl$endpoint'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(body),
+    );
+    return _handleResponse(response);
+  }
+
   static Map<String, dynamic> _handleResponse(http.Response response) {
     final data = jsonDecode(response.body);
 

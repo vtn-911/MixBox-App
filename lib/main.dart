@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mixboxapp/providers/folder_provider.dart';
 import 'package:mixboxapp/providers/user_provider.dart';
 import 'package:mixboxapp/screens/signin_screen.dart';
 import 'package:provider/provider.dart';
@@ -14,7 +15,13 @@ void main() {
     ),
   );
   runApp(
-    ChangeNotifierProvider(create: (_) => UserProvider(), child: const MyApp()),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => FolderProvider()),
+      ],
+      child: const MyApp(),
+    ),
   );
 }
 
